@@ -6,6 +6,7 @@ import com.oguiller.java8.stream.entities.Outer;
 import com.oguiller.java8.stream.entities.Person;
 
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -364,7 +365,7 @@ public class StreamTutorial {
          * FlatMap accepts a function which has to return a stream of objects.
          * So in order to resolve the bar objects of each foo, we just pass the appropriate function:
          */
-
+        System.out.println("----- FlatMap:");
         foos.stream()
                 .flatMap(f -> f.getBars().stream())
                 .forEach(b -> System.out.println(b.getName()));
@@ -384,6 +385,7 @@ public class StreamTutorial {
         }
 
 
+        System.out.println("----- FlatMap to check for NULL:");
         // Checking NULL
         Optional.of(new Outer())
                 .flatMap(o -> Optional.ofNullable(o.getNested()))
@@ -391,6 +393,154 @@ public class StreamTutorial {
                 .flatMap(i -> Optional.ofNullable(i.getFoo()))
                 .ifPresent(System.out::println);
 
+
+        // REDUCE
+
+        /**
+         * <p>
+         *     The reduction operation combines all elements of the stream into a single result. Java 8 supports three different kind of reduce methods.
+         *     The first one reduces a stream of elements to exactly one
+         *     element of the stream. Let's see how we can use this method to determine the oldest person:
+         *
+         * </p>
+         */
+
+        System.out.println("----- REDUCE with a BiFinction:");
+        persons
+                .stream()
+                .reduce((p1, p2) -> p1.getAge() > p2.getAge() ? p1 : p2)
+                .ifPresent(System.out::println);
+
+        /**
+         * <p>
+         *     The reduce method accepts a BinaryOperator accumulator function. That's actually a BiFunction where both operands share the same type, in that case Person.
+         *     BiFunctions are like Function but accept two arguments.
+         *     The example function compares both persons ages in order to return the person with the maximum age.
+         * </p>
+         */
+
+
+        /**
+         * <p>
+         *     The second reduce method accepts both an identity value and a BinaryOperator accumulator. This method can be utilized to construct a new Person with the aggregated names and ages
+         *     from all other persons in the stream:
+         * </p>
+         */
+
+        System.out.println("----- REDUCE (BiFunction & Accumulator):");
+        Person result =
+                persons
+                        .stream()
+                        .reduce(new Person("", 0), (p1, p2) -> {
+                            p1.age += p2.getAge();
+                            p1.name += p2.getName();
+                            return p1;
+                        });
+
+        System.out.format("name=%s; age=%s", result.getName(), result.getAge());
+
+        /**
+         * <p>
+         *     The third reduce method accepts three parameters: an identity value, a BiFunction accumulator and a combiner function of type BinaryOperator.
+         *     Since the identity values type is not restricted to the Person type, we can utilize this reduction to determine the sum of ages from all persons:
+         * </p>
+         */
+
+
+        System.out.println("----- REDUCE (BiFunction & Accumulator) AgedSum:");
+        Integer ageSum = persons
+                .stream()
+                .reduce(0, (sum, p) -> sum += p.age, (sum1, sum2) -> sum1 + sum2);
+
+        System.out.println(ageSum);
+
+
+        Integer ageSum2 = persons
+                .stream()
+                .reduce(0,
+                        (sum, p) -> {
+                            System.out.format("accumulator: sum=%s; person=%s\n", sum, p);
+                            return sum += p.age;
+                        },
+                        (sum1, sum2) -> {
+                            System.out.format("combiner: sum1=%s; sum2=%s\n", sum1, sum2);
+                            return sum1 + sum2;
+                        });
+
+        System.out.println(ageSum2);
+
+        /**
+         * <p>
+         *     As you can see the accumulator function does all the work. It first get called with the initial identity value 0 and the first person Max.
+         *     In the next three steps sum continually increases by the age of the last steps person up to a total age of 76.
+         * </p>
+         */
+        Integer ageSumParallel = persons
+                .parallelStream()
+                .reduce(0,
+                        (sum, p) -> {
+                            System.out.format("accumulator: sum=%s; person=%s\n", sum, p);
+                            return sum += p.age;
+                        },
+                        (sum1, sum2) -> {
+                            System.out.format("combiner: sum1=%s; sum2=%s\n", sum1, sum2);
+                            return sum1 + sum2;
+                        });
+
+        /**
+         * Executing this stream in parallel results in an entirely different execution behavior. Now the combiner is actually called. Since the accumulator is called in
+         * parallel, the combiner is needed to sum up the separate accumulated values.
+         */
+
+        // PARALLEL STREAMS
+
+        /**
+         * Streams can be executed in parallel to increase runtime performance on large amount of input elements. Parallel streams use a common ForkJoinPool available via the static ForkJoinPool.commonPool() method.
+         * The size of the underlying thread-pool uses up to five threads - depending on the amount of available physical CPU cores:
+         */
+
+        System.out.println("----- NUMBER OF PARALLEL THREADS:");
+        ForkJoinPool commonPool = ForkJoinPool.commonPool();
+        System.out.println(commonPool.getParallelism());
+
+        // Can be updated via -Djava.util.concurrent.ForkJoinPool.common.parallelism=5
+
+        Arrays.asList("a1", "a2", "b1", "c2", "c1")
+                .parallelStream()
+                .filter(s -> {
+                    System.out.format("filter: %s [%s]\n",
+                            s, Thread.currentThread().getName());
+                    return true;
+                })
+                .map(s -> {
+                    System.out.format("map: %s [%s]\n",
+                            s, Thread.currentThread().getName());
+                    return s.toUpperCase();
+                })
+                .forEach(s -> System.out.format("forEach: %s [%s]\n",
+                        s, Thread.currentThread().getName()));
+
+
+        System.out.println("----- PARALLEL WITH SORT:");
+        Arrays.asList("a1", "a2", "b1", "c2", "c1")
+                .parallelStream()
+                .filter(s -> {
+                    System.out.format("filter: %s [%s]\n",
+                            s, Thread.currentThread().getName());
+                    return true;
+                })
+                .map(s -> {
+                    System.out.format("map: %s [%s]\n",
+                            s, Thread.currentThread().getName());
+                    return s.toUpperCase();
+                })
+                .sorted((s1, s2) -> {
+                    System.out.format("sort: %s <> %s [%s]\n",
+                            s1, s2, Thread.currentThread().getName());
+                    return s1.compareTo(s2);
+                })
+                .forEach(s -> System.out.format("forEach: %s [%s]\n",
+                        s, Thread.currentThread().getName()));
 
     }
 }
