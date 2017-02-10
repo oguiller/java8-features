@@ -1,4 +1,4 @@
-package com.oguiller.java8.stream;
+package com.oguiller.java8.stream.consumer;
 
 import java.util.Arrays;
 import java.util.List;

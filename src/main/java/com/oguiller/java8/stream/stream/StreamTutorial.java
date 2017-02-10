@@ -1,4 +1,4 @@
-package com.oguiller.java8.stream;
+package com.oguiller.java8.stream.stream;
 
 import com.oguiller.java8.stream.entities.Bar;
 import com.oguiller.java8.stream.entities.Foo;
@@ -17,11 +17,7 @@ public class StreamTutorial {
 
     /**
      * A stream represents a sequence of elements and supports different kind of operations to perform computations upon those elements:
-
      *
-     *
-     *
-     * @param args
      */
     public static void main(String args[]) {
         List<String> myList =
@@ -40,12 +36,13 @@ public class StreamTutorial {
          * In the above example filter, map and sorted are intermediate operations whereas forEach is a terminal operation.
          * </p>
          *
-         * <p>Most stream operations accept some kind of lambda expression parameter, a functional interface specifying the exact behavior of the operation.
+         * <p>
+         *     Most stream operations accept some kind of lambda expression parameter, a functional interface specifying the exact behavior of the operation.
          * Most of those operations must be both non-interfering and stateless.
          * </p>
          *
          * <p>
-         *  A function is non-interfering when it does not modify the underlying data source of the stream,
+         *      A function is non-interfering when it does not modify the underlying data source of the stream,
          *  e.g. in the above example no lambda expression does modify myList by adding or removing elements from the collection.
          * </p>
          *
