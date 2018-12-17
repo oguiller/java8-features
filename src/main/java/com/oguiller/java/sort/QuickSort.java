@@ -2,6 +2,11 @@ package com.oguiller.java.sort;
 
 /**
  * https://www.geeksforgeeks.org/quick-sort/
+ * <p>
+ *     is much more efficient than the bubble sort and insertion sort algorithms. The separation of the elements into
+ *     two separate lists is O(n), and each recursive call happens on half of each list, resulting in O(n log n). This
+ *     is an average performance. The worst case is still O(n2).
+ * </p>
  */
 public class QuickSort {
 
@@ -25,7 +30,27 @@ public class QuickSort {
         printArray(arr);
     }
 
+    /* The main function that implements QuickSort()
+  arr[] --> Array to be sorted,
+  low  --> Starting index,
+  high  --> Ending index */
+    void sort(int arr[], int low, int high) {
+        System.out.printf("Sort low is %s and high is %s\n", low, high);
+        if (low < high) {
+            /* pi is partitioning index, arr[pi] is
+              now at right place */
+            int pi = partition(arr, low, high);
+//            printArray(arr);
+            // Recursively sort elements before
+            // partition and after partition
+
+            sort(arr, low, pi - 1);
+            sort(arr, pi + 1, high);
+        }
+    }
+
     int partition(int arr[], int low, int high) {
+        System.out.println("Partition");
         int pivot = arr[high];
         int i = (low - 1); // index of smaller element
 
@@ -49,24 +74,6 @@ public class QuickSort {
         arr[high] = temp;
 
         return i + 1;
-    }
-
-    /* The main function that implements QuickSort()
-      arr[] --> Array to be sorted,
-      low  --> Starting index,
-      high  --> Ending index */
-    void sort(int arr[], int low, int high) {
-        if (low < high) {
-            /* pi is partitioning index, arr[pi] is
-              now at right place */
-            int pi = partition(arr, low, high);
-//            printArray(arr);
-            // Recursively sort elements before
-            // partition and after partition
-
-            sort(arr, low, pi - 1);
-            sort(arr, pi + 1, high);
-        }
     }
 
 }
